@@ -1,6 +1,6 @@
 import { createMcpHandler } from '@vercel/mcp-adapter';
 import { z } from 'zod';
-import * as Charts from '../../build/charts';
+import * as Charts from '../../src/charts';
 
 const handler = createMcpHandler(server => {
   // Add all chart generation tools from your existing implementation
