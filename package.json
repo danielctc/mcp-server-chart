@@ -12,7 +12,7 @@
     "build": "tsc && tsc-alias -p tsconfig.json",
     "postbuild": "chmod +x build/index.js",
     "start": "npx @modelcontextprotocol/inspector node build/index.js",
-    "prepare": "husky && npm run build",
+    "prepare": "husky",
     "prepublishOnly": "npm run build",
     "test": "vitest"
   },

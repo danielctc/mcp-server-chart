@@ -1,3 +1,9 @@
 {
-  "version": 2
+  "version": 2,
+  "buildCommand": "npm run build",
+  "functions": {
+    "api/mcp/route.ts": {
+      "runtime": "nodejs20.x"
+    }
+  }
 } 
