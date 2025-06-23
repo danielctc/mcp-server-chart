@@ -31,6 +31,8 @@ const { values } = parseArgs({
   },
 });
 
+const isVercel = process.env.VERCEL === "1";
+
 // Display help information if requested
 if (values.help) {
   console.log(`
@@ -48,15 +50,21 @@ Options:
 }
 
 // Run in the specified transport mode
-const transport = values.transport.toLowerCase();
+const transport = isVercel ? "streamable" : values.transport.toLowerCase();
 
 if (transport === "sse") {
-  const port = Number.parseInt(values.port as string, 10);
+  const port = Number.parseInt(
+    (isVercel ? process.env.PORT : values.port) as string,
+    10,
+  );
   // Use provided endpoint or default to "/sse" for SSE
   const endpoint = values.endpoint || "/sse";
   runSSEServer(endpoint, port).catch(console.error);
 } else if (transport === "streamable") {
-  const port = Number.parseInt(values.port as string, 10);
+  const port = Number.parseInt(
+    (isVercel ? process.env.PORT : values.port) as string,
+    10,
+  );
   // Use provided endpoint or default to "/mcp" for streamable
   const endpoint = values.endpoint || "/mcp";
   runHTTPStreamableServer(endpoint, port).catch(console.error);
