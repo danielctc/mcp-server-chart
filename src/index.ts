@@ -1,41 +1,60 @@
 #!/usr/bin/env node
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { parseArgs } from "node:util";
 import {
+  createServer,
   runHTTPStreamableServer,
   runSSEServer,
   runStdioServer,
 } from "./server";
+import { createStreamableHttpHandler } from "./services";
 
-// Parse command line arguments
-const { values } = parseArgs({
-  options: {
-    transport: {
-      type: "string",
-      short: "t",
-      default: "stdio",
-    },
-    port: {
-      type: "string",
-      short: "p",
-      default: "1122",
-    },
-    endpoint: {
-      type: "string",
-      short: "e",
-      default: "", // We'll handle defaults per transport type
-    },
-    help: {
-      type: "boolean",
-      short: "h",
-    },
-  },
-});
+let handler: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
 
-const isVercel = process.env.VERCEL === "1";
+// Check if running in a serverless environment like Vercel
+if (process.env.VERCEL) {
+  handler = createStreamableHttpHandler(createServer);
+}
 
-// Display help information if requested
-if (values.help) {
-  console.log(`
+export default async function (req: IncomingMessage, res: ServerResponse) {
+  if (handler) {
+    return await handler(req, res);
+  }
+  // This part will only be executed if not in a serverless environment
+  // and the file is required by another Node script.
+  res.writeHead(500).end("Not configured for serverless environment");
+}
+
+// The CLI logic should only run when the script is executed directly
+if (require.main === module) {
+  // Parse command line arguments
+  const { values } = parseArgs({
+    options: {
+      transport: {
+        type: "string",
+        short: "t",
+        default: "stdio",
+      },
+      port: {
+        type: "string",
+        short: "p",
+        default: "1122",
+      },
+      endpoint: {
+        type: "string",
+        short: "e",
+        default: "", // We'll handle defaults per transport type
+      },
+      help: {
+        type: "boolean",
+        short: "h",
+      },
+    },
+  });
+
+  // Display help information if requested
+  if (values.help) {
+    console.log(`
 MCP Server Chart CLI
 
 Options:
@@ -46,28 +65,23 @@ Options:
                    - For streamable: default is "/mcp"
   --help, -h       Show this help message
   `);
-  process.exit(0);
-}
+    process.exit(0);
+  }
 
-// Run in the specified transport mode
-const transport = isVercel ? "streamable" : values.transport.toLowerCase();
+  // Run in the specified transport mode
+  const transport = values.transport.toLowerCase();
 
-if (transport === "sse") {
-  const port = Number.parseInt(
-    (isVercel ? process.env.PORT : values.port) as string,
-    10,
-  );
-  // Use provided endpoint or default to "/sse" for SSE
-  const endpoint = values.endpoint || "/sse";
-  runSSEServer(endpoint, port).catch(console.error);
-} else if (transport === "streamable") {
-  const port = Number.parseInt(
-    (isVercel ? process.env.PORT : values.port) as string,
-    10,
-  );
-  // Use provided endpoint or default to "/mcp" for streamable
-  const endpoint = values.endpoint || "/mcp";
-  runHTTPStreamableServer(endpoint, port).catch(console.error);
-} else {
-  runStdioServer().catch(console.error);
+  if (transport === "sse") {
+    const port = Number.parseInt(values.port as string, 10);
+    // Use provided endpoint or default to "/sse" for SSE
+    const endpoint = values.endpoint || "/sse";
+    runSSEServer(endpoint, port).catch(console.error);
+  } else if (transport === "streamable") {
+    const port = Number.parseInt(values.port as string, 10);
+    // Use provided endpoint or default to "/mcp" for streamable
+    const endpoint = values.endpoint || "/mcp";
+    runHTTPStreamableServer(endpoint, port).catch(console.error);
+  } else {
+    runStdioServer().catch(console.error);
+  }
 }

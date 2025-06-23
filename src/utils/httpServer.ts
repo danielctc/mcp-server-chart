@@ -108,14 +108,12 @@ function logServerStartup(
 }
 
 /**
- * Creates a base HTTP server with common functionality
+ * Creates a request handler function with common functionality.
  */
-export function createBaseHttpServer(
-  port: number,
-  endpoint: string,
+export function createBaseHttpHandler(
   handlers: RequestHandlers,
-): http.Server {
-  const httpServer = http.createServer(async (req, res) => {
+): (req: IncomingMessage, res: ServerResponse) => Promise<void> {
+  return async (req, res) => {
     // Handle CORS for all requests
     handleCORS(req, res);
 
@@ -133,9 +131,25 @@ export function createBaseHttpServer(
       await handlers.handleRequest(req, res);
     } catch (error) {
       console.error(`Error in ${handlers.serverType} request handler:`, error);
-      res.writeHead(500).end("Internal Server Error");
+      if (!res.headersSent) {
+        res.writeHead(500).end("Internal Server Error");
+      } else {
+        res.end();
+      }
     }
-  });
+  };
+}
+
+/**
+ * Creates a base HTTP server with common functionality
+ */
+export function createBaseHttpServer(
+  port: number,
+  endpoint: string,
+  handlers: RequestHandlers,
+): http.Server {
+  const requestHandler = createBaseHttpHandler(handlers);
+  const httpServer = http.createServer(requestHandler);
 
   // Set up cleanup handlers
   setupCleanupHandlers(httpServer, handlers.cleanup);
