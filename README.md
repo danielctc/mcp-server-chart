@@ -2,11 +2,33 @@
 
 A Model Context Protocol server for generating charts using [AntV](https://github.com/antvis/).
 
+**Now deployed on Vercel with official MCP adapter support!**
+
 <a href="https://www.star-history.com/#antvis/mcp-server-chart&Date">
   <img width="512" src="https://api.star-history.com/svg?repos=antvis/mcp-server-chart&type=Date" />
 </a>
 
 This is a TypeScript-based MCP server that provides chart generation capabilities. It allows you to create various types of charts through MCP tools. You can also use it in [Dify](https://marketplace.dify.ai/plugins/antv/visualization).
+
+## Features
+
+- Generate various chart types using AntV
+- MCP protocol support for AI integration
+- TypeScript implementation
+- Serverless deployment on Vercel
+
+## Usage
+
+The server provides tools for generating different types of charts including:
+- Area charts
+- Bar charts  
+- Line charts
+- Pie charts
+- And many more...
+
+## Deployment
+
+This server is configured to deploy on Vercel using the official `@vercel/mcp-adapter` package for optimal performance and compatibility.
 
 ## ✨ Features
 
